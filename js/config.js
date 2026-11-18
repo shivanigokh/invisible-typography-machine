@@ -7,10 +7,12 @@ export const CFG = {
 
   // Pinch = thumb-tip ↔ index-tip distance divided by palm length (wrist → middle knuckle),
   // measured on MediaPipe's 3D world landmarks so it is independent of distance to camera.
-  pinchOn: 0.30,
-  pinchOff: 0.46,
-  pinchFramesOn: 2,
-  pinchFramesOff: 2,
+  pinchOn: 0.32,
+  pinchOff: 0.55,   // wide gap between on/off so a held pinch never flickers
+  pinchOnMs: 45,
+  pinchOffMs: 110,
+  offsetHz: 6,      // smoothing of the fingertip offset from the stable knuckle anchor
+  offsetHzHold: 3.5,
 
   // Finger "fold" = fingertip→own knuckle / palm length: ~1.0 straight, ~0.6 arched in a
   // pinch, ~0.35 tucked into a fist. Finger "curl" = fingertip→wrist / knuckle→wrist:
@@ -23,8 +25,8 @@ export const CFG = {
   gestureFrames: 3,
 
   // Smoothing (One Euro filter)
-  cursorMinCutoff: 1.4,
-  cursorBeta: 0.015,
+  cursorMinCutoff: 1.0,
+  cursorBeta: 0.02,
   angleMinCutoff: 1.0,
   angleBeta: 0.4,
   velWindow: 0.1,
@@ -32,8 +34,8 @@ export const CFG = {
   // Grabbing
   grabTol: 34,   // px slack around a glyph's box for a hand pinch
   joinTol: 110,  // px slack for a second hand joining a held word
-  holdK: 900,
-  holdDamp: 0.95,
+  holdK: 620,
+  holdDamp: 1.0,
   holdAngK: 520,
   rotGain: 1.0,
   minStretch: 0.3,
@@ -59,7 +61,7 @@ export const CFG = {
   explodeRadius: 0.38, // fraction of screen diagonal
   shockSpeed: 2600,
   blastMin: 450,
-  blastMax: 2100,
+  blastMax: 1700,
   blastSpin: 14,
   chargeTime: 0.45,
   palmStill: 0.45, // ×W px/s — palm must be roughly still to charge

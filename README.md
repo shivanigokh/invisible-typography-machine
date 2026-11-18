@@ -36,7 +36,7 @@ No build step and no install. Three.js, MediaPipe Tasks Vision (WASM) and the ha
 | Drag | Move while pinching | The object follows with a little mass and lag |
 | Release | Open the pinch | It keeps your hand's momentum, then slows by friction |
 | Throw | Release during a fast movement | Flies in that direction, bounces off walls and other words |
-| Two-hand stretch | Pinch one word with both hands | Distance between hands stretches or compresses it horizontally; tilting the line between your hands rotates it. The stretch is elastic and wobbles on release |
+| Two-hand stretch | Pinch one word with both hands | Stretches along the direction you pull: hands side by side widen or compress it, hands above and below make it taller or shorter. Tilting the line between your hands rotates it. The stretch is elastic and wobbles on release |
 | Rotate | Turn your wrist while pinching | The word rotates with your hand |
 | Open palm | Spread all fingers and hold still ~½ s (a red ring fills) | Shockwave scatters nearby words into individual letters |
 | Fist | Close your hand and hold | Everything is pulled magnetically back home; letters dock and re-form their words |
@@ -72,9 +72,11 @@ js/config.js        every threshold and physics constant
 
 - **Rendering:** each glyph is drawn once to a canvas texture and placed on a quad in an orthographic Three.js scene. A word is a group of its letters, so it can move as one rigid body or break apart into independent letter bodies.
 - **Smoothing:** the cursor (midpoint of thumb and index tips), palm centre and hand angle go through One Euro filters, which remove jitter when still without adding lag when moving fast.
-- **Pinch detection:** thumb–index distance divided by palm length, measured on MediaPipe's 3D *world* landmarks, so it doesn't change with distance from the camera. Hysteresis (on at 0.30, off at 0.46) plus a two-frame debounce stops flicker; a pinch survives brief tracking dropouts (220 ms).
+- **Pinch detection:** thumb–index distance divided by palm length, measured on MediaPipe's 3D *world* landmarks, so it doesn't change with distance from the camera. The signal is smoothed, then a wide hysteresis band (closes below 0.32, opens above 0.55) and a time-based debounce (45 ms to grab, 110 ms to release) stop flicker. A pinch survives brief tracking dropouts (220 ms).
+- **Stable cursor:** fingertips are the noisiest landmarks, so the cursor moves with an anchor on the wrist and knuckles and only the fingertip offset from that anchor is low-passed.
 - **Fist / open palm:** based on how far each fingertip is from its own knuckle and from the wrist, again in 3D. A fist never starts a pinch, and a held object is never dropped by curling your other fingers.
 - **Throwing:** velocity is a least-squares fit over the last 100 ms of hand positions in px/s. On release, the peak velocity from the last 140 ms is used, because hands naturally brake while opening.
+- **Motion:** velocity squash and stretch, short echo trails behind fast glyphs, letters that lift and lean toward a nearby hand, and an elastic pop on grab.
 - **Physics:** fixed 120 Hz step. Held objects follow the hand through a critically damped spring scaled by their mass. Free objects have exponential friction, wall bounces and oriented-box (SAT) collisions with restitution. Horizontal scale is an underdamped spring, which gives the elastic stretch. Explosions travel outward as a shockwave; reassembly uses staggered, slightly swirling springs before each letter docks.
 
 ## Tuning
@@ -92,4 +94,4 @@ Press `D` to show live pinch, curl and fold values next to each hand while you t
 
 ## Credits
 
-Three.js r160 (MIT) · MediaPipe Tasks Vision 0.10.21 and Hand Landmarker model (Apache 2.0) · Instrument Serif, Inter Tight and JetBrains Mono via Google Fonts (OFL).
+Three.js r160 (MIT) · MediaPipe Tasks Vision 0.10.21 and Hand Landmarker model (Apache 2.0) · Bodoni Moda, Archivo (variable width) and IBM Plex Mono via Google Fonts (OFL).

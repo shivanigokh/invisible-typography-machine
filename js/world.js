@@ -4,42 +4,44 @@ import { clamp, wrapAngle } from './filters.js';
 // Screen space is y-down pixels. Angle `a` is clockwise-positive in screen space.
 // Three.js uses an orthographic camera with y-up, so render at (x, -y) with rotation -a.
 
-export const INK = new THREE.Color('#111111');
-export const ACCENT = new THREE.Color('#ff3b1f');
+export const INK = new THREE.Color('#0b0b0c');
+export const ACCENT = new THREE.Color('#1f3bff');
 
-const SANS = '"Inter Tight", "Helvetica Neue", Helvetica, Arial, sans-serif';
-const SERIF = '"Instrument Serif", "Times New Roman", Georgia, serif';
+const SERIF = '"Bodoni Moda", "Bodoni 72", Didot, "Times New Roman", serif';
+const GROT = '"Archivo", "Helvetica Neue", Helvetica, Arial, sans-serif';
 
+// stretch: CSS font-stretch keyword (Archivo is variable 62–125% wide)
 export const STYLES = {
-  'sans-heavy': { font: (s) => `800 ${s}px ${SANS}`, track: -0.045 },
-  'sans-semi': { font: (s) => `600 ${s}px ${SANS}`, track: -0.03 },
-  'sans-light': { font: (s) => `300 ${s}px ${SANS}`, track: 0.05 },
-  'serif': { font: (s) => `400 ${s}px ${SERIF}`, track: -0.01 },
-  'serif-italic': { font: (s) => `italic 400 ${s}px ${SERIF}`, track: -0.015 },
+  'serif': { font: (s) => `500 ${s}px ${SERIF}`, track: -0.02, label: 'BODONI MODA 500' },
+  'serif-italic': { font: (s) => `italic 400 ${s}px ${SERIF}`, track: -0.035, label: 'BODONI MODA ITALIC' },
+  'wide-black': { font: (s) => `900 ${s}px ${GROT}`, stretch: 'expanded', track: -0.03, label: 'ARCHIVO 900 / 125' },
+  'wide-light': { font: (s) => `200 ${s}px ${GROT}`, stretch: 'expanded', track: 0.04, label: 'ARCHIVO 200 / 125' },
+  'cond-black': { font: (s) => `800 ${s}px ${GROT}`, stretch: 'extra-condensed', track: 0, label: 'ARCHIVO 800 / 62' },
+  'grot': { font: (s) => `600 ${s}px ${GROT}`, track: 0, label: 'ARCHIVO 600 / 100' },
 };
 
-// nx/ny = normalized centre, k = size multiplier, a = degrees
+// nx/ny = normalized centre, k = size multiplier, a = degrees, track = override (em)
 export const LAYOUT = [
-  { text: 'MOVE', style: 'sans-heavy', k: 1.25, nx: 0.17, ny: 0.25, a: -4 },
-  { text: 'PLAY', style: 'serif-italic', k: 1.4, nx: 0.46, ny: 0.17, a: 0 },
-  { text: 'FORM', style: 'serif', k: 1.3, nx: 0.79, ny: 0.22, a: 3 },
-  { text: 'EVERYTHING', style: 'serif-italic', k: 0.8, nx: 0.56, ny: 0.33, a: -1 },
-  { text: 'CHAOS', style: 'sans-heavy', k: 1.55, nx: 0.33, ny: 0.48, a: 0 },
-  { text: 'TOUCH', style: 'serif-italic', k: 1.35, nx: 0.76, ny: 0.48, a: -2 },
-  { text: 'SPACE', style: 'sans-light', k: 0.85, nx: 0.13, ny: 0.67, a: 0 },
-  { text: 'SHIFT', style: 'sans-heavy', k: 0.95, nx: 0.5, ny: 0.66, a: 2 },
-  { text: 'FEEL', style: 'serif-italic', k: 1.15, nx: 0.86, ny: 0.69, a: 5 },
-  { text: 'CREATE', style: 'sans-semi', k: 0.95, nx: 0.28, ny: 0.86, a: 0 },
-  { text: 'NOTHING', style: 'serif', k: 0.85, nx: 0.68, ny: 0.87, a: 0 },
-  { text: 'MATERIAL', style: 'sans-light', k: 0.55, nx: 0.22, ny: 0.1, a: 0 },
+  { text: 'EVERYTHING', style: 'serif-italic', k: 1.5, nx: 0.5, ny: 0.31, a: 0 },
+  { text: 'NOTHING', style: 'wide-light', k: 0.42, nx: 0.71, ny: 0.45, a: 0 },
+  { text: 'CHAOS', style: 'wide-black', k: 1.3, nx: 0.38, ny: 0.62, a: -3 },
+  { text: 'MOVE', style: 'serif', k: 1.15, nx: 0.05, ny: 0.55, a: -90 },
+  { text: 'PLAY', style: 'cond-black', k: 1.9, nx: 0.84, ny: 0.68, a: 0 },
+  { text: 'FORM', style: 'serif', k: 0.95, nx: 0.2, ny: 0.13, a: 0 },
+  { text: 'TOUCH', style: 'wide-light', k: 0.72, nx: 0.6, ny: 0.13, a: 0 },
+  { text: 'SPACE', style: 'cond-black', k: 0.5, nx: 0.17, ny: 0.88, a: 0, track: 0.5 },
+  { text: 'SHIFT', style: 'serif-italic', k: 1.0, nx: 0.62, ny: 0.84, a: 4 },
+  { text: 'FEEL', style: 'serif-italic', k: 0.95, nx: 0.955, ny: 0.3, a: 90 },
+  { text: 'CREATE', style: 'wide-black', k: 0.58, nx: 0.38, ny: 0.9, a: 0 },
+  { text: 'MATERIAL', style: 'grot', k: 0.34, nx: 0.84, ny: 0.93, a: 0, track: 0.3 },
   // individual letters
-  { text: 'A', style: 'serif-italic', k: 1.9, nx: 0.05, ny: 0.45, a: 0 },
-  { text: '&', style: 'serif', k: 1.5, nx: 0.95, ny: 0.37, a: -6 },
-  { text: '?', style: 'sans-heavy', k: 1.0, nx: 0.62, ny: 0.07, a: 8 },
-  { text: 'R', style: 'serif', k: 1.15, nx: 0.4, ny: 0.72, a: -8 },
-  { text: 'o', style: 'sans-light', k: 1.3, nx: 0.06, ny: 0.9, a: 0 },
-  { text: '*', style: 'sans-heavy', k: 1.2, nx: 0.95, ny: 0.88, a: 0 },
-  { text: 'g', style: 'serif-italic', k: 1.2, nx: 0.6, ny: 0.77, a: 6 },
+  { text: '&', style: 'serif-italic', k: 2.5, nx: 0.88, ny: 0.15, a: 0 },
+  { text: 'A', style: 'serif', k: 1.5, nx: 0.17, ny: 0.37, a: 0 },
+  { text: '?', style: 'cond-black', k: 1.2, nx: 0.55, ny: 0.62, a: 8 },
+  { text: 'R', style: 'wide-black', k: 0.85, nx: 0.24, ny: 0.75, a: -12 },
+  { text: 'o', style: 'serif-italic', k: 1.25, nx: 0.75, ny: 0.55, a: 0 },
+  { text: '*', style: 'wide-black', k: 0.9, nx: 0.96, ny: 0.9, a: 0 },
+  { text: 'g', style: 'serif-italic', k: 1.05, nx: 0.06, ny: 0.9, a: 0 },
 ];
 
 const PLANE = new THREE.PlaneGeometry(1, 1);
@@ -56,6 +58,7 @@ export class Body {
     this.x = 0; this.y = 0; this.vx = 0; this.vy = 0;
     this.a = 0; this.va = 0;
     this.sx = 1; this.sxv = 0; this.sxRest = 1;
+    this.sy = 1; this.syv = 0; this.syRest = 1;
     this.tx = 0; this.ty = 0; this.ta = 0;
     this.held = false;
     this.holders = [];
@@ -67,6 +70,10 @@ export class Body {
     this.lift = 0;
     this.tint = 0;
     this.z = 0;
+    this.qx = 1; this.qy = 1; // velocity squash
+    this.react = 0;
+    this.trail = [];
+    this.trailTick = 0;
     this.phase = Math.random() * Math.PI * 2;
     this.word = null;
     this.letter = null;
@@ -74,6 +81,8 @@ export class Body {
   get label() {
     return this.word ? this.word.text : this.letter.ch;
   }
+  get hw() { return (this.w * this.sx) / 2; }
+  get hh() { return (this.h * this.sy) / 2; }
 }
 
 export class World {
@@ -100,13 +109,13 @@ export class World {
   build(W, H) {
     this.clear();
     this.W = W; this.H = H;
-    let base = clamp(Math.min(W * 0.078, H * 0.135), 30, 160);
+    let base = clamp(Math.min(W * (W < 700 ? 0.105 : 0.075), H * 0.13), 28, 160);
     let specs;
-    for (let i = 0; i < 8; i++) {
-      specs = LAYOUT.map((L) => this.measure(L, base, W, H));
+    for (let i = 0; i < 10; i++) {
+      specs = LAYOUT.map((L, idx) => this.measure(L, idx, base, W, H));
       const area = specs.reduce((s, p) => s + p.w * p.h, 0);
-      if (area < W * H * 0.26) break;
-      base *= 0.9;
+      if (area < W * H * 0.3) break;
+      base *= 0.92;
     }
     this.base = base;
     this.relax(specs, W, H);
@@ -123,13 +132,17 @@ export class World {
     this.pending = [];
   }
 
-  measure(L, base, W, H) {
+  setFont(g, st, size) {
+    g.font = st.font(size);
+    if ('fontStretch' in g) g.fontStretch = st.stretch || 'normal';
+  }
+
+  measure(L, idx, base, W, H) {
     const st = STYLES[L.style];
     const size = Math.round(base * L.k);
-    const font = st.font(size);
     const g = this.mctx;
-    g.font = font;
-    const track = st.track * size;
+    this.setFont(g, st, size);
+    const track = (L.track !== undefined ? L.track : st.track) * size;
     const m = g.measureText(L.text);
     const asc = Math.ceil(m.actualBoundingBoxAscent);
     const desc = Math.ceil(m.actualBoundingBoxDescent);
@@ -141,27 +154,35 @@ export class World {
       prev = wNext;
     }
     const w = prev + track * (L.text.length - 1);
-    return { L, text: L.text, size, font, w, h: asc + desc, asc, desc, letters, x: L.nx * W, y: L.ny * H, a: (L.a * Math.PI) / 180 };
+    const a = (L.a * Math.PI) / 180;
+    const c = Math.abs(Math.cos(a)), s = Math.abs(Math.sin(a));
+    const h = asc + desc;
+    return {
+      L, idx, st, text: L.text, size, w, h, asc, desc, letters, x: L.nx * W, y: L.ny * H, a,
+      bw: c * w + s * h, bh: s * w + c * h, // axis-aligned footprint for layout
+      caption: `${String(idx + 1).padStart(2, '0')} — ${st.label} — ${size}PX`,
+    };
   }
 
   // push overlapping layout boxes apart so the initial composition never collides
   relax(specs, W, H) {
-    const top = 70, bottom = 46, side = 22, gap = Math.max(12, this.base * 0.14);
+    const top = 64, bottom = 40, side = 16, gap = Math.max(10, this.base * 0.12);
     const clampIn = (s) => {
-      s.x = clamp(s.x, side + s.w / 2, Math.max(side + s.w / 2, W - side - s.w / 2));
-      s.y = clamp(s.y, top + s.h / 2, Math.max(top + s.h / 2, H - bottom - s.h / 2));
+      s.x = clamp(s.x, side + s.bw / 2, Math.max(side + s.bw / 2, W - side - s.bw / 2));
+      s.y = clamp(s.y, top + s.bh / 2, Math.max(top + s.bh / 2, H - bottom - s.bh / 2));
     };
-    for (let it = 0; it < 400; it++) {
+    specs.forEach(clampIn);
+    for (let it = 0; it < 500; it++) {
       let moved = false;
       for (let i = 0; i < specs.length; i++) {
         for (let j = i + 1; j < specs.length; j++) {
           const A = specs[i], B = specs[j];
           const dx = B.x - A.x, dy = B.y - A.y;
-          const ox = (A.w + B.w) / 2 + gap - Math.abs(dx);
-          const oy = (A.h + B.h) / 2 + gap - Math.abs(dy);
+          const ox = (A.bw + B.bw) / 2 + gap - Math.abs(dx);
+          const oy = (A.bh + B.bh) / 2 + gap - Math.abs(dy);
           if (ox > 0 && oy > 0) {
             moved = true;
-            if (ox / (A.w + B.w) < oy / (A.h + B.h)) {
+            if (ox / (A.bw + B.bw) < oy / (A.bh + B.bh)) {
               const s = (dx >= 0 ? 1 : -1) * ox * 0.5;
               A.x -= s; B.x += s;
             } else {
@@ -176,26 +197,35 @@ export class World {
     }
   }
 
+  glyphCanvas(s, ch, cw, chh, pad, dpr, color) {
+    const c = document.createElement('canvas');
+    c.width = Math.ceil(cw * dpr);
+    c.height = Math.ceil(chh * dpr);
+    const g = c.getContext('2d');
+    g.scale(dpr, dpr);
+    this.setFont(g, s.st, s.size);
+    g.fillStyle = color;
+    g.textBaseline = 'alphabetic';
+    g.fillText(ch, pad, pad + s.asc);
+    return c;
+  }
+
   createWord(s) {
     const W = this.W, H = this.H;
     const dpr = Math.min(2, window.devicePixelRatio || 1);
-    const pad = Math.ceil(s.size * 0.22);
+    const pad = Math.ceil(s.size * 0.25);
     const group = new THREE.Group();
     this.root.add(group);
-    const word = { text: s.text, spec: s, letters: [], bound: true, nx: s.x / W, ny: s.y / H, homeX: s.x, homeY: s.y, homeA: s.a, group, body: null };
+    const word = {
+      text: s.text, spec: s, caption: s.caption, letters: [], bound: true,
+      nx: s.x / W, ny: s.y / H, homeX: s.x, homeY: s.y, homeA: s.a, group, body: null,
+    };
     const unit = this.base * this.base * 1.2;
     s.letters.forEach((Lt, i) => {
       const cw = Math.ceil(Lt.adv + pad * 2);
       const ch = Math.ceil(s.h + pad * 2);
-      const c = document.createElement('canvas');
-      c.width = Math.ceil(cw * dpr);
-      c.height = Math.ceil(ch * dpr);
-      const g = c.getContext('2d');
-      g.scale(dpr, dpr);
-      g.font = s.font;
-      g.fillStyle = '#ffffff';
-      g.textBaseline = 'alphabetic';
-      g.fillText(Lt.ch, pad, pad + s.asc);
+      const c = this.glyphCanvas(s, Lt.ch, cw, ch, pad, dpr, '#ffffff');
+      const ink = this.glyphCanvas(s, Lt.ch, cw, ch, pad, 1, '#0b0b0c'); // for echo trails
       const tex = new THREE.CanvasTexture(c);
       tex.colorSpace = THREE.SRGBColorSpace;
       tex.generateMipmaps = false;
@@ -211,7 +241,7 @@ export class World {
       group.add(holder);
       const bw = Math.max(Lt.adv * 0.9, s.size * 0.22);
       const body = new Body('letter', holder, bw, s.h, clamp((bw * s.h) / unit, 0.15, 1.4));
-      const letter = { ch: Lt.ch, index: i, lx, word, holder, mesh, mat, body, docked: false };
+      const letter = { ch: Lt.ch, index: i, lx, word, holder, mesh, mat, body, docked: false, ink, cw, chh: ch, react: 0 };
       body.letter = letter;
       word.letters.push(letter);
     });
@@ -227,6 +257,7 @@ export class World {
     if (b.active) return;
     b.active = true;
     b.z = ++this.zCounter * 0.001;
+    b.trail = [];
     this.bodies.push(b);
   }
   remove(b) {
@@ -269,10 +300,12 @@ export class World {
       lb.vy = b.vy + b.va * rx;
       lb.a = b.a; lb.ta = b.a; lb.va = b.va;
       lb.sx = b.sx; lb.sxRest = 1; lb.sxv = 0;
+      lb.sy = b.sy; lb.syRest = 1; lb.syv = 0;
       lb.held = false; lb.holders = []; lb.docked = false; L.docked = false;
       lb.tint = b.tint; lb.lift = b.lift;
       word.group.remove(L.holder);
       this.root.add(L.holder);
+      L.holder.rotation.set(0, 0, 0);
       this.add(lb);
       out.push(lb);
     }
@@ -295,6 +328,7 @@ export class World {
     b.x = word.homeX; b.y = word.homeY; b.a = word.homeA; b.ta = word.homeA;
     b.vx = b.vy = b.va = 0;
     b.sx = 1; b.sxRest = 1; b.sxv = 0;
+    b.sy = 1; b.syRest = 1; b.syv = 0.6; // tiny settle wobble as the word re-forms
     b.held = false; b.holders = [];
     this.add(b);
   }
@@ -312,7 +346,7 @@ export class World {
     for (const b of this.bodies) {
       if (b.held) continue;
       const d = Math.hypot(b.x - x, b.y - y);
-      if (d > R + Math.max(b.w * b.sx, b.h) / 2) continue;
+      if (d > R + Math.max(b.hw, b.hh)) continue;
       this.pending.push({ at: this.t + d / (this.cfg.shockSpeed * this.speedScale), kind: 'blast', b, x, y, R });
     }
     this.forceAsm = 0;
@@ -330,7 +364,8 @@ export class World {
     b.vx += Math.cos(ang) * sp;
     b.vy += Math.sin(ang) * sp;
     b.va += (Math.random() - 0.5) * cfg.blastSpin * (0.35 + f);
-    b.sxv += (Math.random() - 0.5) * 5 * f;
+    b.sxv += (Math.random() - 0.5) * 6 * f;
+    b.syv += (Math.random() - 0.5) * 6 * f;
     b.docked = false;
     if (b.letter) b.letter.docked = false;
   }
@@ -382,7 +417,7 @@ export class World {
       else {
         const b = w.body;
         b.x = w.homeX; b.y = w.homeY; b.a = b.ta = w.homeA;
-        b.vx = b.vy = b.va = 0; b.sx = b.sxRest = 1; b.sxv = 0;
+        b.vx = b.vy = b.va = 0; b.sx = b.sxRest = 1; b.sxv = 0; b.sy = b.syRest = 1; b.syv = 0;
       }
     }
   }
@@ -395,7 +430,7 @@ export class World {
       const dx = x - b.x, dy = y - b.y;
       const c = Math.cos(b.a), s = Math.sin(b.a);
       const lx = c * dx + s * dy, ly = -s * dx + c * dy;
-      const hw = (b.w * b.sx) / 2, hh = b.h / 2;
+      const hw = b.hw, hh = b.hh;
       const ox = Math.max(0, Math.abs(lx) - hw), oy = Math.max(0, Math.abs(ly) - hh);
       const d = Math.hypot(ox, oy);
       if (d > tol) continue;
@@ -429,6 +464,7 @@ export class World {
           else {
             const m = Math.sqrt(b.mass);
             b.vx += p.vx / m; b.vy += p.vy / m; b.va += p.spin;
+            b.sxv += 1.5; b.syv -= 1;
             b.docked = false; if (b.letter) b.letter.docked = false;
           }
         }
@@ -439,6 +475,7 @@ export class World {
     const W = this.W, H = this.H;
     const fr = Math.exp(-cfg.friction * dt);
     const afr = Math.exp(-cfg.angFriction * dt);
+    const sK = cfg.sxK, sC = 2 * Math.sqrt(cfg.sxK) * cfg.sxDamp;
     for (const b of this.bodies) {
       if (b.docked) continue;
       let ax = 0, ay = 0, aa = 0;
@@ -465,8 +502,9 @@ export class World {
         ax += -dy * swirl * 0.25;
         ay += dx * swirl * 0.25;
         aa = k * 1.4 * wrapAngle(h.a - b.a) - c * 1.2 * b.va;
-        b.sxRest += (1 - b.sxRest) * Math.min(1, dt * 3 * ramp);
-        // cap acceleration to keep it smooth
+        const r = Math.min(1, dt * 3 * ramp);
+        b.sxRest += (1 - b.sxRest) * r;
+        b.syRest += (1 - b.syRest) * r;
         const am = Math.hypot(ax, ay), cap = 9000 * this.speedScale;
         if (am > cap) { ax *= cap / am; ay *= cap / am; }
       } else {
@@ -476,10 +514,11 @@ export class World {
       b.va = clamp(b.va, -30, 30);
       b.x += b.vx * dt; b.y += b.vy * dt; b.a += b.va * dt;
 
-      // elastic horizontal scale
-      const sxa = cfg.sxK * (b.sxRest - b.sx) - 2 * Math.sqrt(cfg.sxK) * cfg.sxDamp * b.sxv;
-      b.sxv += sxa * dt;
+      // elastic scale springs (underdamped → wobble)
+      b.sxv += (sK * (b.sxRest - b.sx) - sC * b.sxv) * dt;
       b.sx = clamp(b.sx + b.sxv * dt, 0.15, 7);
+      b.syv += (sK * (b.syRest - b.sy) - sC * b.syv) * dt;
+      b.sy = clamp(b.sy + b.syv * dt, 0.15, 7);
 
       if (!b.held) this.walls(b, W, H);
       if (!b.held && !b.asmActive && Math.abs(b.vx) + Math.abs(b.vy) < 2) { b.vx = 0; b.vy = 0; }
@@ -492,12 +531,13 @@ export class World {
   walls(b, W, H) {
     const e = this.cfg.wallBounce;
     const c = Math.abs(Math.cos(b.a)), s = Math.abs(Math.sin(b.a));
-    const hw = (b.w * b.sx) / 2, hh = b.h / 2;
+    const hw = b.hw, hh = b.hh;
     const ex = Math.min(c * hw + s * hh, W / 2), ey = Math.min(s * hw + c * hh, H / 2);
-    if (b.x < ex) { b.x = ex; if (b.vx < 0) { b.vx = -b.vx * e; b.va += b.vy * 0.002; b.sxv -= 0.4; } }
-    if (b.x > W - ex) { b.x = W - ex; if (b.vx > 0) { b.vx = -b.vx * e; b.va -= b.vy * 0.002; b.sxv -= 0.4; } }
-    if (b.y < ey) { b.y = ey; if (b.vy < 0) { b.vy = -b.vy * e; b.va -= b.vx * 0.002; } }
-    if (b.y > H - ey) { b.y = H - ey; if (b.vy > 0) { b.vy = -b.vy * e; b.va += b.vx * 0.002; } }
+    const k = 0.00025;
+    if (b.x < ex) { b.x = ex; if (b.vx < 0) { b.sxv -= Math.abs(b.vx) * k * 4; b.vx = -b.vx * e; b.va += b.vy * 0.002; } }
+    if (b.x > W - ex) { b.x = W - ex; if (b.vx > 0) { b.sxv -= Math.abs(b.vx) * k * 4; b.vx = -b.vx * e; b.va -= b.vy * 0.002; } }
+    if (b.y < ey) { b.y = ey; if (b.vy < 0) { b.syv -= Math.abs(b.vy) * k * 4; b.vy = -b.vy * e; b.va -= b.vx * 0.002; } }
+    if (b.y > H - ey) { b.y = H - ey; if (b.vy > 0) { b.syv -= Math.abs(b.vy) * k * 4; b.vy = -b.vy * e; b.va += b.vx * 0.002; } }
   }
 
   collide() {
@@ -507,12 +547,12 @@ export class World {
     for (let i = 0; i < n; i++) {
       const A = list[i];
       if (A.docked || A.asmActive) continue;
-      const rA = Math.hypot((A.w * A.sx) / 2, A.h / 2);
+      const rA = Math.hypot(A.hw, A.hh);
       for (let j = i + 1; j < n; j++) {
         const B = list[j];
         if (B.docked || B.asmActive) continue;
         const dx = B.x - A.x, dy = B.y - A.y;
-        const rB = Math.hypot((B.w * B.sx) / 2, B.h / 2);
+        const rB = Math.hypot(B.hw, B.hh);
         if (dx * dx + dy * dy > (rA + rB) * (rA + rB)) continue;
         const hit = sat(A, B, dx, dy);
         if (!hit) continue;
@@ -531,7 +571,11 @@ export class World {
           const spin = Math.min(jn, 4000) * 0.0012;
           A.va += (Math.random() - 0.5) * spin * imA;
           B.va += (Math.random() - 0.5) * spin * imB;
-          if (jn > 200) { A.sxv -= 0.15 * imA; B.sxv -= 0.15 * imB; }
+          if (jn > 150) {
+            const q = Math.min(1.2, jn * 0.0004);
+            A.sxv -= q * imA; A.syv += q * 0.6 * imA;
+            B.sxv -= q * imB; B.syv += q * 0.6 * imB;
+          }
         }
       }
     }
@@ -543,8 +587,10 @@ export class World {
     for (const b of this.bodies) {
       if (!b.letter || b.docked || b.held || !b.asmActive) continue;
       const h = this.homeOf(b);
-      if (Math.hypot(h.x - b.x, h.y - b.y) < lim && Math.hypot(b.vx, b.vy) < 60 && Math.abs(wrapAngle(h.a - b.a)) < 0.05 && Math.abs(b.sx - 1) < 0.06) {
-        b.x = h.x; b.y = h.y; b.a = h.a; b.vx = b.vy = b.va = 0; b.sx = b.sxRest = 1; b.sxv = 0;
+      if (Math.hypot(h.x - b.x, h.y - b.y) < lim && Math.hypot(b.vx, b.vy) < 60 && Math.abs(wrapAngle(h.a - b.a)) < 0.05 &&
+          Math.abs(b.sx - 1) < 0.06 && Math.abs(b.sy - 1) < 0.06) {
+        b.x = h.x; b.y = h.y; b.a = h.a; b.vx = b.vy = b.va = 0;
+        b.sx = b.sxRest = 1; b.sxv = 0; b.sy = b.syRest = 1; b.syv = 0;
         b.docked = true; b.letter.docked = true;
       }
     }
@@ -554,18 +600,70 @@ export class World {
   }
 
   // ---------- rendering ----------
-  sync(dt, time) {
+  // cursors: [{x, y, pinch}] — letters lean towards / lift for nearby hands
+  sync(dt, time, cursors) {
     const k = Math.min(1, dt * 12);
+    const ks = Math.min(1, dt * 14);
+    const R = this.base * 2.2;
     for (const b of this.bodies) {
       b.lift += ((b.held ? 1 : 0) - b.lift) * k;
       b.tint += ((b.held ? 1 : 0) - b.tint) * Math.min(1, dt * 8);
-      const bob = !b.held && !b.asmActive && Math.abs(b.vx) + Math.abs(b.vy) < 1 ? Math.sin(time * 0.8 + b.phase) * this.base * 0.025 : 0;
+      const still = !b.held && !b.asmActive && Math.abs(b.vx) + Math.abs(b.vy) < 1;
+      const bob = still ? Math.sin(time * 0.8 + b.phase) * this.base * 0.022 : 0;
       b.bob = (b.bob || 0) + (bob - (b.bob || 0)) * Math.min(1, dt * 3);
-      const lift = 1 + b.lift * 0.05;
-      const sy = Math.pow(b.sx, -0.2) * lift;
+
+      // velocity squash & stretch in the body's own frame
+      const c = Math.cos(b.a), s = Math.sin(b.a);
+      const vlx = c * b.vx + s * b.vy, vly = -s * b.vx + c * b.vy;
+      const sp = 0.00011 / Math.max(0.5, this.speedScale);
+      const tqx = 1 + Math.min(0.35, Math.abs(vlx) * sp) - Math.min(0.15, Math.abs(vly) * sp * 0.45);
+      const tqy = 1 + Math.min(0.35, Math.abs(vly) * sp) - Math.min(0.15, Math.abs(vlx) * sp * 0.45);
+      b.qx += (tqx - b.qx) * ks;
+      b.qy += (tqy - b.qy) * ks;
+
+      const lift = 1 + b.lift * 0.06;
+      // mild volume preservation: stretching one axis thins the other
+      const vsx = b.sx * Math.pow(b.sy, -0.18) * b.qx * lift;
+      const vsy = b.sy * Math.pow(b.sx, -0.18) * b.qy * lift;
+      b.vsx = vsx; b.vsy = vsy;
       b.obj.position.set(b.x, -(b.y + b.bob), b.held ? 50 : b.z);
       b.obj.rotation.z = -b.a;
-      b.obj.scale.set(b.sx * lift, sy, 1);
+      b.obj.scale.set(vsx, vsy, 1);
+
+      // letter-level reaction to nearby hands
+      if (b.word) {
+        for (const L of b.word.letters) {
+          const wx = b.x + c * L.lx * vsx, wy = b.y + s * L.lx * vsx;
+          let f = 0, side = 0;
+          for (const p of cursors) {
+            const d = Math.hypot(p.x - wx, p.y - wy);
+            const ff = Math.max(0, 1 - d / R);
+            if (ff > f) { f = ff; side = Math.sign(wx - p.x); }
+          }
+          f = f * f * (3 - 2 * f);
+          if (b.held) f = Math.max(f, 0.35 + 0.25 * Math.sin(time * 9 + L.index * 0.9));
+          L.react += (f - L.react) * Math.min(1, dt * 10);
+          L.holder.position.y = L.react * this.base * 0.16;
+          L.holder.rotation.z = -side * L.react * 0.09;
+          const sc = 1 + L.react * 0.1;
+          L.holder.scale.set(sc, sc, 1);
+        }
+      } else if (b.letter) {
+        let f = 0;
+        for (const p of cursors) f = Math.max(f, 1 - Math.hypot(p.x - b.x, p.y - b.y) / R);
+        f = Math.max(0, f);
+        b.react += (f * f - b.react) * Math.min(1, dt * 10);
+        b.obj.scale.set(vsx * (1 + b.react * 0.12), vsy * (1 + b.react * 0.12), 1);
+      }
+
+      // echo trail snapshots while moving fast
+      const speed = Math.hypot(b.vx, b.vy);
+      if (speed > 520 * this.speedScale && ++b.trailTick % 2 === 0) {
+        b.trail.push({ x: b.x, y: b.y + b.bob, a: b.a, sx: vsx, sy: vsy, t: time });
+        if (b.trail.length > 7) b.trail.shift();
+      }
+      while (b.trail.length && time - b.trail[0].t > 0.28) b.trail.shift();
+
       const mats = b.word ? b.word.letters.map((L) => L.mat) : [b.letter.mat];
       for (const m of mats) m.color.lerpColors(INK, ACCENT, b.tint);
     }
@@ -575,8 +673,8 @@ export class World {
 // Separating-axis test for two oriented rectangles. Normal points from A to B.
 function sat(A, B, dx, dy) {
   const ca = Math.cos(A.a), sa = Math.sin(A.a), cb = Math.cos(B.a), sb = Math.sin(B.a);
-  const hwA = (A.w * A.sx) / 2 * 0.96, hhA = A.h / 2 * 0.96;
-  const hwB = (B.w * B.sx) / 2 * 0.96, hhB = B.h / 2 * 0.96;
+  const hwA = A.hw * 0.96, hhA = A.hh * 0.96;
+  const hwB = B.hw * 0.96, hhB = B.hh * 0.96;
   const axes = [[ca, sa], [-sa, ca], [cb, sb], [-sb, cb]];
   let best = Infinity, bx = 0, by = 0;
   for (const [ax, ay] of axes) {

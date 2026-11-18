@@ -6,6 +6,23 @@ import { Interaction } from './interaction.js';
 import { Overlay, drawGrid } from './overlay.js';
 
 const $ = (s) => document.querySelector(s);
+
+// split intro title into letters for the staggered entrance
+{
+  let i = 0;
+  for (const el of document.querySelectorAll('.split')) {
+    const txt = el.textContent;
+    el.textContent = '';
+    for (const ch of txt) {
+      const sp = document.createElement('span');
+      sp.className = 'ch';
+      sp.textContent = ch;
+      sp.style.setProperty('--i', i++);
+      sp.style.setProperty('--r', `${(Math.random() - 0.5) * 18}deg`);
+      el.append(sp);
+    }
+  }
+}
 const stage = $('#stage');
 const gridCanvas = $('#grid');
 const glCanvas = $('#gl');
@@ -42,7 +59,7 @@ let entered = false;
 
 // ---------- fonts, then build ----------
 async function loadFonts() {
-  const faces = Object.values(STYLES).map((s) => s.font(100));
+  const faces = Object.values(STYLES).map((s) => s.font(100)).concat(['400 12px "IBM Plex Mono"', '500 12px "IBM Plex Mono"']);
   const all = Promise.all(faces.map((f) => document.fonts.load(f, LAYOUT.map((l) => l.text).join(''))));
   await Promise.race([all.then(() => document.fonts.ready), new Promise((r) => setTimeout(r, 3500))]);
 }
@@ -261,9 +278,11 @@ function frame(nowMs) {
   while (acc >= STEP && steps < 8) { world.step(STEP); acc -= STEP; steps++; }
   if (steps === 8) acc = 0;
 
-  world.sync(dt, t);
+  const cursors = [];
+  for (const p of pointers) if (p.present && (p.kind === 'hand' || entered)) cursors.push(p);
+  world.sync(dt, t, cursors);
   renderer.render(scene, camera);
-  overlay.draw(pointers, world, debug);
+  overlay.draw(pointers, world, debug, t);
   drawPreview();
 
   fpsAcc += dt; fpsN++;

@@ -7,7 +7,7 @@
   <meta name="description" content="An experimental typography playground. Grab, stretch, throw and scatter words with your hands through webcam hand tracking." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter+Tight:wght@300;400;600;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
   <script type="importmap">
     { "imports": { "three": "./vendor/three/three.module.js" } }
@@ -40,7 +40,7 @@
       <li><b>Drag</b><span>Move your hand while pinching</span></li>
       <li><b>Release</b><span>Open the pinch, the word keeps your momentum</span></li>
       <li><b>Throw</b><span>Release during a fast movement</span></li>
-      <li><b>Stretch</b><span>Pinch one word with both hands, pull apart or push together, tilt to rotate</span></li>
+      <li><b>Stretch</b><span>Pinch one word with both hands. Pull sideways to widen, up/down to make it taller, push together to compress, tilt to rotate</span></li>
       <li><b>Rotate</b><span>Turn your wrist while pinching</span></li>
       <li><b>Open palm</b><span>Hold a spread hand still for a moment to scatter letters</span></li>
       <li><b>Fist</b><span>Close your hand to pull everything home</span></li>
@@ -58,15 +58,20 @@
   <div id="toast" role="status" aria-live="polite"></div>
 
   <section id="intro" class="ui">
-    <div class="intro-meta"><span>EXPERIMENTAL TYPE INSTRUMENT</span><span>N° 001</span></div>
-    <h1>
-      <span class="l1">The Invisible</span>
-      <span class="l2">Typography</span>
-      <span class="l3">Machine</span>
+    <div class="intro-meta"><span>EXPERIMENTAL TYPE INSTRUMENT</span><span>HAND-TRACKED · PROCESSED LOCALLY</span><span>N° 001</span></div>
+    <h1 aria-label="The Invisible Typography Machine">
+      <span class="l0" aria-hidden="true">The</span>
+      <span class="l1 split" aria-hidden="true">Invisible</span>
+      <span class="l2 split" aria-hidden="true">Typography</span>
+      <span class="l3 split" aria-hidden="true">Machine</span>
     </h1>
-    <p class="tagline">Move things without touching them.</p>
-    <button id="enter" type="button">Enter the playground <span aria-hidden="true">→</span></button>
-    <p class="privacy">Uses your webcam for hand tracking. Video is processed on this device and is never stored or uploaded.</p>
+    <div class="intro-foot">
+      <p class="tagline">Move things without touching them.</p>
+      <div class="intro-cta">
+        <button id="enter" type="button">Enter the playground <span aria-hidden="true">→</span></button>
+        <p class="privacy">Uses your webcam for hand tracking. Video is processed on this device and is never stored or uploaded.</p>
+      </div>
+    </div>
   </section>
 
   <script type="module" src="js/main.js"></script>

@@ -20,11 +20,11 @@ export class Pointer {
   }
   recordVel(t) {
     this.vHist.push({ t, vx: this.vx, vy: this.vy });
-    while (this.vHist.length && t - this.vHist[0].t > 0.2) this.vHist.shift();
+    while (this.vHist.length && t - this.vHist[0].t > 0.3) this.vHist.shift();
   }
   // Peak velocity just before release: hands naturally brake while the pinch opens,
   // so the strongest recent sample reflects the intended throw.
-  releaseVelocity(t, win = 0.14) {
+  releaseVelocity(t, win = 0.2) {
     let best = { vx: this.vx, vy: this.vy }, bs = Math.hypot(this.vx, this.vy);
     for (const h of this.vHist) {
       if (t - h.t > win) continue;
@@ -64,6 +64,10 @@ export class Hand extends Pointer {
     this.vel.reset(); this.pvel.reset(); this.vHist = [];
     this.pinch = false;
     this.pinchCnt = 0;
+    this.pinchS = null;
+    this.pinchSince = null;
+    this.offX = null; this.offY = null;
+    this.prevUpd = null;
     this.gesture = 'none';
     this.gCand = 'none';
     this.gCnt = 0;
@@ -88,16 +92,30 @@ export class Hand extends Pointer {
 
     const G = wl && wl.length === 21 ? wl : lmN.map((p) => ({ x: p.x * (W / H), y: p.y, z: p.z }));
     const palm = Math.max(1e-6, d3(G[0], G[9]));
-    const pinchR = d3(G[4], G[8]) / palm;
+    const pinchRaw = d3(G[4], G[8]) / palm;
+    // light exponential smoothing of the pinch signal removes single-frame spikes
+    this.pinchS = this.pinchS === null ? pinchRaw : this.pinchS + (pinchRaw - this.pinchS) * 0.55;
+    const pinchR = this.pinchS;
+    const dt = this.prevUpd === null ? 1 / 30 : clamp(t - this.prevUpd, 1 / 120, 0.1);
+    this.prevUpd = t;
     // extension: tip→wrist / knuckle→wrist (≈2 straight, ≈1 curled)
     const curls = FINGERS.map(([tip, mcp]) => d3(G[tip], G[0]) / Math.max(1e-6, d3(G[mcp], G[0])));
     // fold: tip→own knuckle / palm (≈1 straight, ≈0.6 arched in a pinch, ≈0.35 tucked in a fist)
     const folds = FINGERS.map(([tip, mcp]) => d3(G[tip], G[mcp]) / palm);
     const thumbOut = d3(G[4], G[17]) / palm;
     this.metrics = { pinchR, curls, folds, thumbOut };
+    this.pinchAmt = clamp((pinchR - cfg.pinchOn * 0.6) / (1.0 - cfg.pinchOn * 0.6), 0, 1); // 0 closed … 1 open
 
-    // cursor = midpoint of thumb and index tips
-    const cx = (S[4].x + S[8].x) / 2, cy = (S[4].y + S[8].y) / 2;
+    // Cursor = thumb/index midpoint. Fingertips are the noisiest landmarks, so move the cursor with
+    // a stable anchor (wrist + knuckles) and only low-pass the fingertip offset from that anchor.
+    const ax = (S[0].x + S[1].x + S[5].x + S[9].x + S[17].x) / 5;
+    const ay = (S[0].y + S[1].y + S[5].y + S[9].y + S[17].y) / 5;
+    const ox = (S[4].x + S[8].x) / 2 - ax, oy = (S[4].y + S[8].y) / 2 - ay;
+    const oa = 1 - Math.exp(-dt * (this.pinch ? cfg.offsetHzHold : cfg.offsetHz) * 2 * Math.PI);
+    if (this.offX === null) { this.offX = ox; this.offY = oy; }
+    this.offX += (ox - this.offX) * oa;
+    this.offY += (oy - this.offY) * oa;
+    const cx = ax + this.offX, cy = ay + this.offY;
     this.x = this.fx.filter(cx, t);
     this.y = this.fy.filter(cy, t);
     this.vel.push(t, this.x, this.y);
@@ -126,18 +144,20 @@ export class Hand extends Pointer {
 
     // pinch with hysteresis + frame debounce. A tight fist is never a new pinch,
     // but an existing pinch survives curling the other fingers.
-    if (!this.pinch) {
-      if (pinchR < cfg.pinchOn && folds[0] > cfg.pinchMinFold) {
-        if (++this.pinchCnt >= cfg.pinchFramesOn) { this.pinch = true; this.pinchCnt = 0; }
-      } else this.pinchCnt = 0;
-    } else {
-      if (pinchR > cfg.pinchOff) {
-        if (++this.pinchCnt >= cfg.pinchFramesOff) { this.pinch = false; this.pinchCnt = 0; }
-      } else this.pinchCnt = 0;
-    }
+    // Pinch with wide hysteresis and a time-based debounce (frame-rate independent):
+    // it must stay closed for pinchOnMs to grab and open for pinchOffMs to release.
+    const wantOn = pinchR < cfg.pinchOn && folds[0] > cfg.pinchMinFold;
+    const wantOff = pinchR > cfg.pinchOff;
+    if (this.pinch ? wantOff : wantOn) {
+      if (this.pinchSince === null) this.pinchSince = t;
+      if ((t - this.pinchSince) * 1000 >= (this.pinch ? cfg.pinchOffMs : cfg.pinchOnMs)) {
+        this.pinch = !this.pinch;
+        this.pinchSince = null;
+      }
+    } else this.pinchSince = null;
 
     // an empty pinch that tightens into a fist becomes a fist (a held object is never dropped this way)
-    if (this.pinch && isFist && !this.held) { this.pinch = false; this.pinchCnt = 0; }
+    if (this.pinch && isFist && !this.held) { this.pinch = false; this.pinchSince = null; }
 
     const cand = this.pinch ? 'pinch' : isFist ? 'fist' : isOpen ? 'open' : 'none';
     if (cand === this.gCand) this.gCnt++;

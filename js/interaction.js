@@ -105,6 +105,9 @@ export class Interaction {
     target.holdKey = '';
     p.held = target;
     this.world.bringToFront(target);
+    // a little elastic "pop" when picked up
+    target.sxv += 1.6;
+    target.syv -= 1.2;
     this.emit(target.holders.length === 2 ? `TWO HANDS — STRETCH ${target.label}` : `PINCH — ${target.label}`);
   }
 
@@ -138,8 +141,8 @@ export class Interaction {
       // torque from an off-centre grab point
       if (g && g.ox !== undefined) {
         const c = Math.cos(b.a), s = Math.sin(b.a);
-        const rx = c * g.ox * b.sx - s * g.oy, ry = s * g.ox * b.sx + c * g.oy;
-        const I = (b.w * b.sx) ** 2 / 12 + (b.h * b.h) / 12 + 1;
+        const rx = c * g.ox * b.sx - s * g.oy * b.sy, ry = s * g.ox * b.sx + c * g.oy * b.sy;
+        const I = (b.hw * 2) ** 2 / 12 + (b.hh * 2) ** 2 / 12 + 1;
         b.va += clamp(((rx * vy - ry * vx) / I) * 0.35, -9, 9);
       }
     }
@@ -160,15 +163,20 @@ export class Interaction {
       if (hs.length === 1) {
         const p = hs[0];
         const dx = p.x - b.x, dy = p.y - b.y;
-        b.hold = { a0: b.a, h0: p.angle, ox: (c * dx + s * dy) / b.sx, oy: -s * dx + c * dy };
+        b.hold = { a0: b.a, h0: p.angle, ox: (c * dx + s * dy) / b.sx, oy: (-s * dx + c * dy) / b.sy };
       } else {
         const [A, B] = hs;
         const mx = (A.x + B.x) / 2, my = (A.y + B.y) / 2;
         const ang = Math.atan2(B.y - A.y, B.x - A.x);
         const dx = b.x - mx, dy = b.y - my;
+        // Stretch along whichever of the glyph's own axes is closest to the line between the
+        // hands: pull sideways → wider, pull up/down → taller.
+        const rel = wrapAngle(ang - b.a);
+        const axis = Math.abs(Math.cos(rel)) >= Math.abs(Math.sin(rel)) ? 'x' : 'y';
         b.hold = {
-          two: true, a0: b.a, d0: Math.max(30, Math.hypot(B.x - A.x, B.y - A.y)), sx0: b.sxRest,
-          angPrev: ang, angAcc: 0, ox: (c * dx + s * dy) / b.sx, oy: -s * dx + c * dy,
+          two: true, axis, a0: b.a, d0: Math.max(30, Math.hypot(B.x - A.x, B.y - A.y)),
+          s0: axis === 'x' ? b.sxRest : b.syRest,
+          angPrev: ang, angAcc: 0, ox: (c * dx + s * dy) / b.sx, oy: (-s * dx + c * dy) / b.sy,
         };
       }
     }
@@ -177,7 +185,7 @@ export class Interaction {
       const p = hs[0];
       b.ta = g.a0 + (p.angle - g.h0) * cfg.rotGain;
       const c = Math.cos(b.ta), s = Math.sin(b.ta);
-      const ox = g.ox * b.sx, oy = g.oy;
+      const ox = g.ox * b.sx, oy = g.oy * b.sy;
       b.tx = p.x - (c * ox - s * oy);
       b.ty = p.y - (s * ox + c * oy);
     } else {
@@ -188,9 +196,10 @@ export class Interaction {
       g.angAcc += wrapAngle(ang - g.angPrev);
       g.angPrev = ang;
       b.ta = g.a0 + g.angAcc;
-      b.sxRest = clamp((g.sx0 * d) / g.d0, cfg.minStretch, cfg.maxStretch);
+      const st = clamp((g.s0 * d) / g.d0, cfg.minStretch, cfg.maxStretch);
+      if (g.axis === 'x') b.sxRest = st; else b.syRest = st;
       const c = Math.cos(b.ta), s = Math.sin(b.ta);
-      const ox = g.ox * b.sxRest, oy = g.oy;
+      const ox = g.ox * b.sxRest, oy = g.oy * b.syRest;
       b.tx = mx + c * ox - s * oy;
       b.ty = my + s * ox + c * oy;
     }
